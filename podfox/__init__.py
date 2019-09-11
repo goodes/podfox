@@ -194,25 +194,32 @@ def download_multiple(feed, maxnum):
         if maxnum == 0:
             break
         if not episode['downloaded']:
-            download_single(feed['shortname'], episode['url'])
+            download_single(feed['shortname'], episode['url'], episode['title'], episode['published'])
             episode['downloaded'] = True
             maxnum -= 1
     overwrite_config(feed)
 
 
-def download_single(folder, url):
+def download_single(folder, url, filename, published=None):
     print(url)
     base = CONFIGURATION['podcast-directory']
     r = requests.get(url.strip(), stream=True)
     try:
-        filename=re.findall('filename="([^"]+)',r.headers['content-disposition'])[0]
+        print(r.headers['content-disposition'])
     except:
-        filename = url.split('/')[-1]
-        filename = filename.split('?')[0]
-    print_green("{:s} downloading".format(filename))
-    with open(os.path.join(base, folder, filename), 'wb') as f:
+        pass
+    #try:
+    #    filename=re.findall('filename="([^"]+)',r.headers['content-disposition'])[0]
+    #except:
+    #    filename = url.split('/')[-1]
+    #    filename = filename.split('?')[0]
+    print_green("{:s}  ... downloading".format(filename))
+    file_path = os.path.join(base, folder, filename)
+    with open(file_path, 'wb') as f:
         for chunk in r.iter_content(chunk_size=1024**2):
             f.write(chunk)
+    if published:
+        os.utime(file_path, (published, published))
     print("done.")
 
 
